@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "dhash": "^0.0.4",
+    "fast-glob": "^3.2.12",
+    "mysql": "^2.18.1",
+  }
+}
