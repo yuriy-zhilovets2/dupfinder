@@ -13,6 +13,7 @@ async function search()
 {
   const finder = new DupFinder('localhost', 'dhash', 'istanbul', 'dhash')
   const hash = await finder.calcHash_p(file)
+  console.log("hash=", hash)
   const found = await finder.find_p(hash)
   console.log(found)
 }
