@@ -36,7 +36,6 @@ CREATE image_hash (
 );
 */
 
-const dhash = require("dhash")
 const mysql = require('mysql')
 
 const combinations = [
@@ -59,34 +58,12 @@ class DupFinder {
   }
 
   /**
-   * @param {string} fileName - name of the image file
-  */  
-  calcHash_p(fileName)
-  {
-    return new Promise( (resolve, reject) =>
-    {
-      dhash(fileName, function(err, hash)
-      {
-        if (err)
-        {
-          reject(err)
-        }
-        else
-        {
-          resolve(hash)
-        }
-      })
-    })
-  }
-  
-  /**
-   * @param {string} fileName - name of the image file
    * @param {string} name - identifier of the image
+   * @param {string} hash - hash of the image
    * @returns {Promise} - Promise object for await
   */  
-  async add_p(fileName, name)
+  async add_p(name, hash)
   {
-    const hash = await this.calcHash_p(fileName)
     const chunks = this.#splitHash(hash).map( (el,i) => `b${i}=0x${el}` ).join(", ")
     // console.log(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
     await this.#query_p(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
@@ -103,12 +80,12 @@ class DupFinder {
     const where0 = combinations.map(([m,n]) => `(b${m}=${chunks[m]} AND b${n}=${chunks[n]})`).join(" OR ")
     const where = `(${where0}) AND (BIT_COUNT(hash ^ 0x${hash}) <= 6)`
     
-    let q = `SELECT name, BIT_COUNT(hash ^ 0x${hash}) AS distance FROM image_hash WHERE ${where}`
+    let q = `SELECT name, BIT_COUNT(hash ^ 0x${hash}) AS distance FROM image_hash WHERE ${where} ORDER BY distance`
     if (limit)
     {
-      q += ` ORDER BY distance LIMIT ${limit}`
+      q += ` LIMIT ${limit}`
     }
-    console.log(q)
+    // console.log(q)
  
     const results = await this.#query_p(q)
     return results

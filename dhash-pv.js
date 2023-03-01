@@ -47,6 +47,10 @@ function diff(pixels, width, height)
    return binaryToHex(difference)
 }
 
+/**
+  * @param {string} path - name of the image file
+  * @param {number} [hashSize] - sizo of the hash in bytes (default 8)
+*/
 function dhash(path, hashSize)
 {
   const height = hashSize || DEFAULT_HASH_SIZE

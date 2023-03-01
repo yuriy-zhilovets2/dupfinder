@@ -11,7 +11,8 @@ if (!directory)
 }
 
 const fg = require('fast-glob')
-const DupFinder = require("./dupfinder-mysql")
+const dhash_p = require("./dhash-pv")
+const DupFinder = require("./dupfinder")
 
 async function walk()
 {
@@ -22,7 +23,8 @@ async function walk()
   {
    process.stderr.write(name+"\n")
    try {
-     await finder.add_p(name, name)
+     const hash = await dhash_p(name)
+     await finder.add_p(name, hash)
    }
    catch(err)
    {
