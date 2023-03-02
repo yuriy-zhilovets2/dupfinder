@@ -11,7 +11,7 @@ if (!directory)
 }
 
 const fg = require('fast-glob')
-const dhash_p = require("./dhash-pv")
+const dhash_p = require("./dhash-p")
 const DupFinder = require("./dupfinder")
 
 async function walk()

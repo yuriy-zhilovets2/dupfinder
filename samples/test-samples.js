@@ -1,4 +1,4 @@
-const dhash = require('../dhash-pv')
+const dhash = require('../dhash-p')
 const hamming = require('hamming-distance');
 
 const test = [

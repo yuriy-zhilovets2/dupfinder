@@ -28,12 +28,12 @@ const digits = {
 
 function binaryToHex(s) 
 {
-	return s.match(/..../g).map( nibble => digits[nibble] ).join("")
+	return s.match(/.{4}/g).map( nibble => digits[nibble] ).join("")
 }
 
 function diff(pixels, width, height)
 {
-   let difference = '';
+   let difference = ""
 
    for (let row = 0; row < height; row++) 
    {
@@ -48,8 +48,8 @@ function diff(pixels, width, height)
 }
 
 /**
-  * @param {string} path - name of the image file
-  * @param {number} [hashSize] - sizo of the hash in bytes (default 8)
+  * @param {string} path - image file name
+  * @param {number} [hashSize] - size of the hash in bytes (default 8)
 */
 function dhash(path, hashSize)
 {

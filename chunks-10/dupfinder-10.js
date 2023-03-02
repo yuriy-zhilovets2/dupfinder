@@ -13,6 +13,8 @@ CREATE image_hash (
   `b5` tinyint(3) unsigned NOT NULL,
   `b6` tinyint(3) unsigned NOT NULL,
   `b7` tinyint(3) unsigned NOT NULL,
+  `b8` tinyint(3) unsigned NOT NULL,
+  `b9` tinyint(3) unsigned NOT NULL,
   UNIQUE KEY `name` (`name`),
   KEY `b0` (`b0`),
   KEY `b1` (`b1`),
@@ -21,7 +23,9 @@ CREATE image_hash (
   KEY `b4` (`b4`),
   KEY `b5` (`b5`),
   KEY `b6` (`b6`),
-  KEY `b7` (`b7`)
+  KEY `b7` (`b7`),
+  KEY `b8` (`b8`),
+  KEY `b9` (`b9`)
   ENGINE=InnoDB
 );
 */
@@ -29,8 +33,14 @@ CREATE image_hash (
 const mysql = require('mysql')
 
 const combinations = [
-  [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7],
-  [2, 3], [2, 4], [2, 5], [2, 6], [2, 7], [3, 4], [3, 5], [3, 6], [3, 7], [4, 5], [4, 6], [4, 7], [5, 6], [5, 7], [6, 7]
+[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [0, 8], [0, 9], 
+[1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [1, 8], [1, 9], 
+[2, 3], [2, 4], [2, 5], [2, 6], [2, 7], [2, 8], [2, 9], 
+[3, 4], [3, 5], [3, 6], [3, 7], [3, 8], [3, 9], 
+[4, 5], [4, 6], [4, 7], [4, 8], [4, 9], 
+[5, 6], [5, 7], [5, 8], [5, 9], 
+[6, 7], [6, 8], [6, 9], 
+[7, 8], [7, 9], [8, 9]
 ]
 
 class DupFinder {
@@ -61,21 +71,21 @@ class DupFinder {
 
   /**
    * @param {string} hash - image hash calculated by calcHash_p
-   * @param {number} [limit=0] - number of returned results, 0 means all results
-   * @returns {Promise} - Promise object represents results of search sorted by distance (i.e. relevancy)
+   * @param {number} [limit=0] - number of returned results
+   * @returns {Promise} - Promise object represents results of search
   */  
   async find_p(hash, limit=0)
   {
-    const chunks = this.#splitHash(hash).map( el => `0x${el}` )
+    const chunks = this.#splitHash(hash)
     const where0 = combinations.map(([m,n]) => `(b${m}=${chunks[m]} AND b${n}=${chunks[n]})`).join(" OR ")
-    const where = `(${where0}) AND (BIT_COUNT(hash ^ 0x${hash}) <= 6)`
+    const where = `(${where0}) AND (BIT_COUNT(hash ^ 0x${hash}) <= 8)`
     
     let q = `SELECT name, BIT_COUNT(hash ^ 0x${hash}) AS distance FROM image_hash WHERE ${where} ORDER BY distance`
     if (limit)
     {
       q += ` LIMIT ${limit}`
     }
-    // console.log(q)
+     console.log(q)
  
     const results = await this.#query_p(q)
     return results
@@ -99,9 +109,31 @@ class DupFinder {
     })
   }
   
+  #digits = {
+    "0": "0000",
+    "1": "0001",
+    "2": "0010",
+    "3": "0011",
+    "4": "0100",
+    "5": "0101",
+    "6": "0110",
+    "7": "0111",
+    "8": "1000",
+    "9": "1001",
+    "A": "1010",
+    "B": "1011",
+    "C": "1100",
+    "D": "1101",
+    "E": "1110",
+    "F": "1111",
+  }
+  
   #splitHash(hash)
   {
-    return hash.match(/../g)
+    const bin = hash.toUpperCase().split("").map(d => this.#digits[d]).join("")
+    const chunks = bin.match(/^(.{7})(.{7})(.{7})(.{7})(.{6})(.{6})(.{6})(.{6})(.{6})(.{6})/)
+    chunks.shift()
+    return chunks.map( chunk => parseInt(chunk,2) )
   }
 
 }
