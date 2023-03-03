@@ -74,7 +74,7 @@ class DupFinder {
    * @param {number} [limit=0] - number of returned results
    * @returns {Promise} - Promise object represents results of search
   */  
-  async find_p(hash, limit=0)
+  async match_p(hash, limit=0)
   {
     const chunks = this.#splitHash(hash)
     const where0 = combinations.map(([m,n]) => `(b${m}=${chunks[m]} AND b${n}=${chunks[n]})`).join(" OR ")
