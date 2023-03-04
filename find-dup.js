@@ -7,15 +7,15 @@ if (!file)
   process.exit()
 }
 
-const dhash_p = require("./dhash-p")
+const dhash = require("./dhash")
 const DupFinder = require("./dupfinder")
 
 async function search()
 {
   const finder = new DupFinder('localhost', 'dhash', 'istanbul', 'dhash')
-  const hash = await dhash_p(file)
+  const hash = await dhash(file)
   console.log(file, hash)
-  const found = await finder.match_p(hash)
+  const found = await finder.match(hash)
   console.log(found)
 }
 

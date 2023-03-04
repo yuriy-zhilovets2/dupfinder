@@ -62,19 +62,19 @@ class DupFinder {
    * @param {string} hash - hash of the image
    * @returns {Promise} - Promise object for await
   */  
-  async add_p(name, hash)
+  async add(name, hash)
   {
     const chunks = this.#splitHash(hash).map( (el,i) => `b${i}=0x${el}` ).join(", ")
     // console.log(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
-    await this.#query_p(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
+    await this.#query(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
   }
 
   /**
-   * @param {string} hash - image hash calculated by calcHash_p
+   * @param {string} hash - image hash calculated by dhash
    * @param {number} [limit=0] - number of returned results
    * @returns {Promise} - Promise object represents results of search
   */  
-  async match_p(hash, limit=0)
+  async match(hash, limit=0)
   {
     const chunks = this.#splitHash(hash)
     const where0 = combinations.map(([m,n]) => `(b${m}=${chunks[m]} AND b${n}=${chunks[n]})`).join(" OR ")
@@ -87,11 +87,11 @@ class DupFinder {
     }
      console.log(q)
  
-    const results = await this.#query_p(q)
+    const results = await this.#query(q)
     return results
   }
   
-  #query_p(qstr, values)
+  #query(qstr, values)
   {
     return new Promise( (resolve, reject) =>
     {

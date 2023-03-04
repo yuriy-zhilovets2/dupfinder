@@ -36,6 +36,7 @@ const combinations = [
 class DupFinder {
 
   /**
+   * Creates a new dupfinder object
    * @param {string} host - name of the mysql host
    * @param {string} user - user of mysql database
    * @param {string} password - password of the user
@@ -48,27 +49,75 @@ class DupFinder {
   }
 
   /**
-   * @param {string} name - identifier of the image
+   * Adds a new entry to the image hashes database
+   *
+   * @param {string} name - an unique identifier of the image
    * @param {string} hash - hash of the image
    * @returns {Promise} - Promise object for await
   */  
-  async add_p(name, hash)
+  async add(name, hash)
   {
     const chunks = this.#splitHash(hash).map( (el,i) => `b${i}=0x${el}` ).join(", ")
     // console.log(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
-    await this.#query_p(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
+    await this.#query(`INSERT INTO image_hash SET name=?, hash=0x${hash}, ${chunks}`, name)
   }
 
   /**
-   * @param {string} hash - image hash calculated by calcHash_p
-   * @param {number} [limit=0] - number of returned results, 0 means all results
+   * Removes an entry from the image hashes database
+   *
+   * @param {string} name - an unique identifier of the image
+   * @returns {Promise} - Promise object for await
+  */  
+  async remove(name)
+  {
+    await this.#query("DELETE FROM image_hash WHERE name=?", name)
+  }
+
+  /**
+   * Finds a hash by image name
+   * 
+   * @param {string} name - identifier of the image
+   * @returns {Promise} - Promise object, returns a hash or undefined if a name was not found
+  */  
+  async hashOf(name)
+  {
+    const res = await this.#query("SELECT LPAD(HEX(hash), 16, '0') AS hash FROM image_hash WHERE name=?", name)
+    if (res.length)
+    {
+      return res[0].hash
+    }
+    else
+    {
+      return undefined
+    }
+  }
+
+  /**
+   * Finds a hash of the image with provided name and matches it against the image hashes database
+   * 
+   * @param {string} name - identifier of the image
+   * @returns {Promise} - Promise object returns a hash or undefined if a name was not found
+  */  
+  async matchFromName(name, maxDist=6, limit=0)
+  {
+    const hash = await this.hashOf(name)
+    if (!hash) return []
+    return this.match(hash, maxDist, limit)
+  }
+  
+  /**
+   * Matches a hash against the image hashes database
+   *
+   * @param {string} hash - 8 byte image hash calculated by dhash
+   * @param {number} [maxDist=0] - maximal hamming distance of found duplicates (0..6, 0 does not always find exact duplicates)
+   * @param {number} [limit=0] - number of returned results, 0 means all results. Usually this param is not needed
    * @returns {Promise} - Promise object represents results of search sorted by distance (i.e. relevancy)
   */  
-  async match_p(hash, limit=0)
+  async match(hash, maxDist=6, limit=0)
   {
     const chunks = this.#splitHash(hash).map( el => `0x${el}` )
     const where0 = combinations.map(([m,n]) => `(b${m}=${chunks[m]} AND b${n}=${chunks[n]})`).join(" OR ")
-    const where = `(${where0}) AND (BIT_COUNT(hash ^ 0x${hash}) <= 6)`
+    const where = `(${where0}) AND (BIT_COUNT(hash ^ 0x${hash}) <= ${maxDist})`
     
     let q = `SELECT name, BIT_COUNT(hash ^ 0x${hash}) AS distance FROM image_hash WHERE ${where} ORDER BY distance`
     if (limit)
@@ -77,11 +126,11 @@ class DupFinder {
     }
     // console.log(q)
  
-    const results = await this.#query_p(q)
+    const results = await this.#query(q)
     return results
   }
   
-  #query_p(qstr, values)
+  #query(qstr, values)
   {
     return new Promise( (resolve, reject) =>
     {
