@@ -44,7 +44,29 @@ function diff(pixels, width, height)
      }
    }
 
-   return binaryToHex(difference)
+   return difference
+}
+
+function average(pixels, width, height)
+{
+   const avg = pixels.reduce((sum, a) => sum + a, 0) / width / height
+   return Array.from(pixels).map(p => p>=avg ? "1" : "0").join("")
+}
+
+function calcHash(path, size, algo)
+{
+  return new Promise( (resolve, reject) =>
+  {
+  	gm(path)
+ 	    .colorspace('Rec601Luma')
+ 	    .filter('Lanczos')
+	    .resize(size[0], size[1], '!')
+	    .toBuffer('GRAY', function(err, buffer) 
+	    {
+		    if (err) return reject(err)	
+ 			  resolve( binaryToHex(algo(buffer, size[0], size[1])) )
+		  })
+	 })
 }
 
 /**
@@ -54,19 +76,18 @@ function diff(pixels, width, height)
 function dhash(path, hashSize)
 {
   const height = hashSize || DEFAULT_HASH_SIZE
-  const width = height + 1;
- 
-  return new Promise( (resolve, reject) =>
-  {
-  	gm(path)
- 	    .colorspace('GRAY')
-	    .resize(width, height, '!')
-	    .toBuffer('GRAY', function(err, buffer) 
-	    {
-		    if (err) return reject(err)	
- 			  resolve( diff(buffer, width, height) )
-		  })
-	 })
+  return calcHash(path, [height+1, height], diff)
 }
 
-module.exports = dhash
+/**
+  * @param {string} path - image file name
+  * @param {number} [hashSize] - size of the hash in bytes (default 8)
+*/
+function ahash(path, hashSize)
+{
+  const height = hashSize || DEFAULT_HASH_SIZE
+  return calcHash(path, [height, height], average)
+}
+
+module.exports = { dhash, ahash }
+

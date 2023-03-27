@@ -1,4 +1,4 @@
-const dhash = require('../dhash')
+const { ahash } = require('../image-hash')
 const hamming = require('hamming-distance');
 
 const test = [
@@ -11,14 +11,15 @@ const test = [
 "dj-letter.jpg",
 "dj-crop2.jpg",
 "dj-crop3.jpg",
+"dj-tilt.jpg",
 ]
 
-dhash("dj.jpg").then( baseHash =>
+ahash("set1/dj.jpg").then( baseHash =>
 {
   console.log("dj.jpg", baseHash)
   for (let f of test)
   { 
-    dhash(f).then( hash =>
+    ahash("set1/"+f).then( hash =>
     {
       console.log(f, hash, hamming(hash, baseHash))
     } );

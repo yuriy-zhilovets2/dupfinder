@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "dhash": "^0.0.4",
     "fast-glob": "^3.2.12",
     "gm": "^1.25.0",
     "hamming-distance": "^1.0.0",

@@ -7,7 +7,7 @@ if (!file)
   process.exit()
 }
 
-const dhash = require("./dhash")
+const dhash = require("../dhash")
 const DupFinder = require("./dupfinder")
 
 async function search()

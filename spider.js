@@ -11,7 +11,7 @@ if (!directory)
 }
 
 const fg = require('fast-glob')
-const dhash = require("./dhash")
+const { dhash } = require("./image-hash")
 const DupFinder = require("./dupfinder")
 
 async function walk()
@@ -34,4 +34,3 @@ async function walk()
 }
 
 walk().then( () => { process.stderr.write("Done\n"); process.exit() })
-
